@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Virtual Library System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to right, #f0f4f8, #e6f0ff); /* Light gradient background */
+        }
+        #chat-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1D4ED8;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 class="text-4xl font-bold text-gray-800 text-center flex-grow" style="padding-left: 14%;">
+                Virtual Library System
+            </h1>
+            <div class="flex items-center space-x-4 ml-auto">
+                <a href="{% url 'book_list' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300">Back to Home</a>
+            </div>
+        </div>
+        <nav class="bg-gray-800 text-white">
+            <div class="container mx-auto px-4">
+                <ul class="flex space-x-6 py-3">
+                    <li><a href="{% url 'book_list' %}" class="hover:text-blue-300">Home</a></li>
+                    <li><a href="#" class="hover:text-blue-300">Library</a></li>
+                    <li><a href="{% url 'about_us' %}" class="hover:text-blue-300">About Us</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-extrabold text-center mb-12 text-gray-900">About Us</h1>
+        <div class="space-y-12 text-gray-800">
+            <!-- Introduction Section -->
+            <section class="bg-gradient-to-r from-blue-100 to-blue-200 p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center mb-4 text-blue-900">Welcome to the Virtual Library System!</h2>
+                <p class="text-lg text-center italic">
+                    Our mission is to provide easy and accessible digital resources for book lovers everywhere.
+                </p>
+            </section>
+    
+            <!-- Mission Section with Left and Right Aligned Text -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="p-6 bg-gray-100 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Our Mission</h3>
+                    <p class="text-lg">
+                        With a wide range of categories, we are committed to making books more accessible and promoting a love for reading in the digital age.
+                    </p>
+                </div>
+                <div class="p-6 bg-gray-200 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">What We Offer</h3>
+                    <p class="text-lg">
+                        Our digital platform ensures that you can dive into the world of books from the comfort of your own home. Whether you're into fiction, non-fiction, science, history, or any other genre, we've got you covered.
+                    </p>
+                </div>
+            </section>
+    
+            <!-- Personal Beliefs Section -->
+            <section class="bg-blue-50 p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center text-blue-800 mb-4">Our Belief</h2>
+                <p class="text-lg text-left font-serif italic">
+                    We believe that reading should be a joy, not a privilege. That's why we are dedicated to offering a rich collection of eBooks and audiobooks to cater to diverse tastes and preferences.
+                </p>
+            </section>
+    
+            <!-- Call to Action Section -->
+            <section class="bg-yellow-100 p-8 rounded-lg shadow-lg">
+                <h3 class="text-3xl font-bold text-center text-yellow-800 mb-4">Join Us</h3>
+                <p class="text-lg text-center">
+                    Join us in our mission to make the world a more literate and informed place, one book at a time.
+                </p>
+            </section>
+        </div>
+    </main>
+    
+
+    <button id="chat-button" class="chatbot-pulse">💬</button>
+    <div id="chat-window" class="fixed bottom-20 right-4 z-50 w-80 h-96 bg-white shadow-lg rounded-lg p-4 hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Chatbot</h3>
+            <button id="close-chat" class="text-red-600">X</button>
+        </div>
+        <div id="chat-messages" class="flex flex-col gap-2 h-64 overflow-y-auto border rounded p-2"></div>
+        <div class="flex gap-2">
+            <input id="user-input" type="text" class="flex-1 border rounded p-2" placeholder="Ask about a book...">
+            <button id="send-message" class="bg-blue-600 text-white px-4 py-2 rounded">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const chatButton = document.getElementById('chat-button');
+        const closeButton = document.getElementById('close-chat');
+        const sendMessageButton = document.getElementById('send-message');
+        const userInput = document.getElementById('user-input');
+        const chatMessages = document.getElementById('chat-messages');
+        
+        chatButton.addEventListener('click', () => chatWindow.classList.toggle('hidden'));
+        closeButton.addEventListener('click', () => chatWindow.classList.add('hidden'));
+        
+        sendMessageButton.addEventListener('click', async () => {
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+
+            const userMessageElement = document.createElement('div');
+            userMessageElement.textContent = userMessage;
+            userMessageElement.className = 'bg-blue-100 p-2 rounded self-end';
+            chatMessages.appendChild(userMessageElement);
+            userInput.value = '';
+
+            try {
+                const response = await fetch('/chatbot/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const botMessageElement = document.createElement('div');
+                    botMessageElement.innerHTML = data.response;
+                    botMessageElement.className = 'bg-gray-100 p-2 rounded self-start';
+                    chatMessages.appendChild(botMessageElement);
+                } else {
+                    console.error('Error:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

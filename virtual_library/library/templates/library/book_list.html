@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Library System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to right, #f0f4f8, #e6f0ff); /* Light gradient background */
+            background-size: cover;
+            background-position: center;
+            /* background-image: url(https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/rj3VhjeXiok7px9t/videoblocks-a-close-shot-at-the-bright-lights-of-edison-small-lights-hang-from-above-and-illuminate-the-underground-wall-with-warm-light_rxsgo4u8z_thumbnail-1080_01.png); */
+        }
+        #chat-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1D4ED8;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .chatbot-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes slideInFromTop {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .welcome-animation {
+            animation: slideInFromTop 1s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 class="text-4xl font-bold text-gray-800 text-center flex-grow " style="padding-left: 14%;">
+                Virtual Library System
+            </h1>
+            <div class="flex items-center space-x-4 ml-auto">
+                {% if user.is_authenticated %}
+                    <div class="text-gray-800 welcome-animation">
+                        Welcome, {{ user.username }}
+                        <a href="{% url 'profile' %}" class="text-blue-600 hover:underline ml-2">Profile</a>
+                        <a href="{% url 'logout' %}" class="inline-block bg-red-500 text-white py-2 px-4 ml-2 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105">
+                            Logout
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 welcome-animation">Login</a>
+                    <a href="{% url 'register' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 welcome-animation">Register</a>
+                {% endif %}
+            </div>
+        </div>
+        <nav class="bg-gray-800 text-white">
+            <div class="container mx-auto px-4">
+                <ul class="flex space-x-6 py-3">
+                    <li><a href="{% url 'book_list' %}" class="hover:text-blue-300">Home</a></li>
+                    <li><a href="#" class="hover:text-blue-300">Library</a></li>
+                    <!-- <li><a href="#" class="hover:text-blue-300">Audio Books</a></li> -->
+                    <li><a href="{% url 'about_us' %}" class="hover:text-blue-300">About Us</a></li>
+                </ul>                
+            </div>
+        </nav>
+    </header>
+    
+    <!-- New Section with Image -->
+    <div class="h-[50vh] bg-gray-100">
+        <img src="https://wallpaperaccess.com/full/5487854.jpg" alt="Library Image" class="w-full h-full object-cover">
+    </div>
+
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold text-center mb-12 text-gray-800 ">Welcome to Virtual Library</h1>
+        <form method="get" class="flex justify-center mb-8">
+            <input type="text" name="q" placeholder="Search books..." class="w-1/2 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button type="submit" class="ml-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">Search</button>
+        </form>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 welcome-animation">
+            {% for category in categories %}
+            <a href="{% url 'book_list_by_category' category.name %}" class="bg-gradient-to-r {{ category.gradient }} rounded-xl p-6 text-white transform hover:scale-105 transition">
+                <h3 class="text-xl font-semibold mb-2">{{ category.name }}</h3>
+                <p>{{ category.description }}</p>
+            </a>
+            {% endfor %}
+        </div>
+        <ul class="space-y-4 grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 welcome-animation">
+            {% for book in books %}
+            <li class="bg-white rounded-lg shadow-md px-6 py-4">
+                <a href="{{ book.id }}/" class="text-blue-600 hover:underline font-semibold">{{ book.name }}</a>
+                <span class="text-gray-600">- {{ book.category }}</span>
+            </li>
+            {% empty %}
+            <p class="text-gray-600 text-center col-span-3">No books available.</p>
+            {% endfor %}
+        </ul>
+    </main>
+    <button id="chat-button" class="chatbot-pulse">💬</button>
+    <div id="chat-window" class="fixed bottom-20 right-4 z-50 w-80 h-96 bg-white shadow-lg rounded-lg p-4 hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Chatbot</h3>
+            <button id="close-chat" class="text-red-600">X</button>
+        </div>
+        <div id="chat-messages" class="flex flex-col gap-2 h-64 overflow-y-auto border rounded p-2"></div>
+        <div class="flex gap-2">
+            <input id="user-input" type="text" class="flex-1 border rounded p-2" placeholder="Ask about a book...">
+            <button id="send-message" class="bg-blue-600 text-white px-4 py-2 rounded">Send</button>
+        </div>
+    </div>
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const chatButton = document.getElementById('chat-button');
+        const closeButton = document.getElementById('close-chat');
+        const sendMessageButton = document.getElementById('send-message');
+        const userInput = document.getElementById('user-input');
+        const chatMessages = document.getElementById('chat-messages');
+        
+        chatButton.addEventListener('click', () => chatWindow.classList.toggle('hidden'));
+        closeButton.addEventListener('click', () => chatWindow.classList.add('hidden'));
+        
+        sendMessageButton.addEventListener('click', async () => {
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+
+            const userMessageElement = document.createElement('div');
+            userMessageElement.textContent = userMessage;
+            userMessageElement.className = 'bg-blue-100 p-2 rounded self-end';
+            chatMessages.appendChild(userMessageElement);
+            userInput.value = '';
+
+            try {
+                const response = await fetch('/chatbot/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const botMessageElement = document.createElement('div');
+                    botMessageElement.innerHTML = data.response;
+                    botMessageElement.className = 'bg-gray-100 p-2 rounded self-start';
+                    chatMessages.appendChild(botMessageElement);
+                } else {
+                    console.error('Error:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
